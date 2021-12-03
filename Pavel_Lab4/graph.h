@@ -55,7 +55,7 @@ public:
 	// Перегрузка оператора вывода для вывода информации о графе в поток.
 	friend std::ostream& operator<<(std::ostream& theOut, const Graph<NodeType>& theGraph)
 	{
-		for (const auto& aKeyValue : theGraph.myAdjacencyList)
+		for (const auto& aKeyValue : theGraph.myAdjacencyMap)
 		{
 			const NodeType& aKey = aKeyValue.first;
 			const Graph<NodeType>::NodeList& aNodeList = aKeyValue.second;
@@ -91,6 +91,8 @@ public:
 	//               либо существует цикл, включающий переданный узел.
 	bool ExistsPathBetweenTwoNodes(const NodeType& theBeginNode, const NodeType& theEndNode) const;
 
+	std::map<NodeType, NodeList> GetAdjacencyMap() const;
+
 private:
 	// Функция удаляет дубликаты из списка смежных узлов для каждого узла.
 	// Например, для map:
@@ -99,10 +101,10 @@ private:
 	// Функция сделает:
 	// A - {B, C, D}
 	// B - {A, D}
-	void deleteDuplicatesInAdjencyLists();
+	void deleteDuplicatesInAdjacencyLists();
 	
 private:
-	std::map<NodeType, NodeList> myAdjacencyList;
+	std::map<NodeType, NodeList> myAdjacencyMap;
 };
 
 //=========================================================
@@ -142,7 +144,7 @@ void Graph<NodeType>::Build(const NodeList & theNodeList, const EdgeList & theEd
 {
 	for (const auto& aNode : theNodeList)
 	{
-		myAdjacencyList[aNode]; // инициализация ключей std::map узлами графа
+		myAdjacencyMap[aNode]; // инициализация ключей std::map узлами графа
 	}
 
 	// Заполнение значений для ключей std::map
@@ -152,19 +154,19 @@ void Graph<NodeType>::Build(const NodeList & theNodeList, const EdgeList & theEd
 		const auto& anEdgeBegin = anEdge.first;
 		const auto& anEdgeEnd = anEdge.second;
 
-		if (myAdjacencyList.find(anEdgeBegin) == myAdjacencyList.end() ||
-			myAdjacencyList.find(anEdgeEnd) == myAdjacencyList.end())
+		if (myAdjacencyMap.find(anEdgeBegin) == myAdjacencyMap.end() ||
+			myAdjacencyMap.find(anEdgeEnd) == myAdjacencyMap.end())
 		{
 			// Если узел не найден среди ключей std::map
 			throw std::runtime_error("Incorrect Node in Edge");
 		}
 		else
 		{
-			myAdjacencyList[anEdgeBegin].push_back(anEdgeEnd);
+			myAdjacencyMap[anEdgeBegin].push_back(anEdgeEnd);
 		}
 	}
 
-	deleteDuplicatesInAdjencyLists();
+	deleteDuplicatesInAdjacencyLists();
 }
 
 //=========================================================
@@ -178,7 +180,7 @@ bool Graph<NodeType>::AddNode(const NodeType & theNode)
 	//                    (or to the element that prevented the insertion)
 	//                    and a bool denoting whether the insertion took place".
 	// Читай подробности здесь https://en.cppreference.com/w/cpp/container/map/insert
-	return myAdjacencyList.insert(theNode).second;
+	return myAdjacencyMap.insert(theNode).second;
 }
 
 //=========================================================
@@ -194,10 +196,10 @@ bool Graph<NodeType>::AddEdge(const Edge & theEdge)
 	const NodeType& anEdgeBegin = theEdge.first;
 	const NodeType& anEdgeEnd = theEdge.second;
 
-	auto anEdgeBeginIter = myAdjacencyList.find(anEdgeBegin);
-	auto anEdgeEndIter = myAdjacencyList.find(anEdgeEnd);
-	if (anEdgeBeginIter == myAdjacencyList.end() ||
-		anEdgeEndIter == myAdjacencyList.end())
+	auto anEdgeBeginIter = myAdjacencyMap.find(anEdgeBegin);
+	auto anEdgeEndIter = myAdjacencyMap.find(anEdgeEnd);
+	if (anEdgeBeginIter == myAdjacencyMap.end() ||
+		anEdgeEndIter == myAdjacencyMap.end())
 	{
 		// Если узел не найден среди ключей std::map
 		throw std::runtime_error("Incorrect Node in Edge");
@@ -211,7 +213,7 @@ bool Graph<NodeType>::AddEdge(const Edge & theEdge)
 
 		if (!aNodeIsAlreadyInList)
 		{
-			myAdjacencyList[anEdgeBegin].push_back(anEdgeEnd);
+			myAdjacencyMap[anEdgeBegin].push_back(anEdgeEnd);
 		}
 
 		return !aNodeIsAlreadyInList;
@@ -225,7 +227,7 @@ bool Graph<NodeType>::AddEdge(const Edge & theEdge)
 template<class NodeType>
 void Graph<NodeType>::Clear()
 {
-	myAdjacencyList.clear();
+	myAdjacencyMap.clear();
 }
 
 //=========================================================
@@ -235,18 +237,18 @@ void Graph<NodeType>::Clear()
 template<class NodeType>
 bool Graph<NodeType>::RemoveNode(const NodeType& theNode)
 {
-	auto aNodeIter = myAdjacencyList.find(theNode);
-	if (aNodeIter == myAdjacencyList.end())
+	auto aNodeIter = myAdjacencyMap.find(theNode);
+	if (aNodeIter == myAdjacencyMap.end())
 	{
 		// узел не найден в графе
 		return false;
 	}
 	else
 	{
-		myAdjacencyList.erase(aNodeIter); // удаление данного узла из графа
+		myAdjacencyMap.erase(aNodeIter); // удаление данного узла из графа
 
 		// удаление всех упоминаний данного узла из списков смежных узлов
-		for (auto aKeyValue : myAdjacencyList)
+		for (auto aKeyValue : myAdjacencyMap)
 		{
 			NodeList& aNodeList = aKeyValue.second;
 			aNodeList.remove(theNode); // удаление всех вхождений theNode в список aNodeList
@@ -265,8 +267,8 @@ bool Graph<NodeType>::RemoveEdge(const Edge& theEdge)
 {
 	const NodeType& anEdgeBegin = theEdge.first;
 	const NodeType& anEdgeEnd = theEdge.second;
-	auto aNodeIter = myAdjacencyList.find(anEdgeBegin);
-	if (aNodeIter == myAdjacencyList.end())
+	auto aNodeIter = myAdjacencyMap.find(anEdgeBegin);
+	if (aNodeIter == myAdjacencyMap.end())
 	{
 		return false;
 	}
@@ -295,7 +297,7 @@ bool Graph<NodeType>::IsGraphConnected() const
 {
 	// заполнение массива всех узлов, которые есть в графе
 	std::vector<NodeType> aNodeVector;
-	for (const auto& aKeyValue : myAdjacencyList)
+	for (const auto& aKeyValue : myAdjacencyMap)
 	{
 		const NodeType& aNode = aKeyValue.first;
 		aNodeVector.push_back(aNode);
@@ -322,11 +324,11 @@ bool Graph<NodeType>::IsGraphConnected() const
 template<class NodeType>
 bool Graph<NodeType>::ExistsPathBetweenTwoNodes(const NodeType& theBeginNode, const NodeType& theEndNode) const
 {
-	// копия myAdjencyMap за тем исключением, что значение ключа состоит также из флага.
+	// копия myAdjacencyMap за тем исключением, что значение ключа состоит также из флага.
 	// Этот флаг обозначает, посещали ли мы уже данный узел или нет.
 	// Изначально этот флаг инициализируется в false.
 	std::map<NodeType, std::pair<EdgeList, bool>> aMap;
-	for (const auto& aKeyValue : myAdjacencyList)
+	for (const auto& aKeyValue : myAdjacencyMap)
 	{
 		const NodeType& aKey = aKey.first;
 		const EdgeList& aValue = aKey.second;
@@ -370,13 +372,13 @@ bool Graph<NodeType>::ExistsPathBetweenTwoNodes(const NodeType& theBeginNode, co
 }
 
 //=========================================================
-// Function : deleteDuplicatesInAdjencyLists
+// Function : deleteDuplicatesInAdjacencyLists
 // Purpose  : Удаление дубликатов из списков смежных узлов
 //=========================================================
 template<class NodeType>
-void Graph<NodeType>::deleteDuplicatesInAdjencyLists()
+void Graph<NodeType>::deleteDuplicatesInAdjacencyLists()
 {
-	for (auto anIter = myAdjacencyList.begin(); anIter != myAdjacencyList.end(); ++anIter)
+	for (auto anIter = myAdjacencyMap.begin(); anIter != myAdjacencyMap.end(); ++anIter)
 	{
 		auto& aNodeList = anIter->second;
 
