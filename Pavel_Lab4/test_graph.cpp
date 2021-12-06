@@ -556,6 +556,49 @@ TEST(Graph, removal_of_incorrect_edge_returns_false)
 	ASSERT_FALSE(aGraph.RemoveEdge({ "a", "e" }));
 }
 
+// Тест: "ContainsNode" возвращает истну, если узел есть в графе.
+TEST(Graph, contains_node_returns_true_if_graph_contains_node)
+{
+	// Используется граф 1.
+	StringGraph aGraph;
+	aGraph.Build({ "a", "b", "c", "d" }, { {"a", "b"}, {"b", "c"}, {"b", "d"}, {"d", "a"} });
+	ASSERT_TRUE(aGraph.ContainsNode("a") && aGraph.ContainsNode("b") && aGraph.ContainsNode("c") && aGraph.ContainsNode("d"));
+}
+
+// Тест: "ContainsNode" возвращает ложь, если узла нет в графе.
+TEST(Graph, contains_node_returns_false_if_graph_does_not_contain_node)
+{
+	// Используется граф 1.
+	StringGraph aGraph;
+	aGraph.Build({ "a", "b", "c", "d" }, { {"a", "b"}, {"b", "c"}, {"b", "d"}, {"d", "a"} });
+	ASSERT_FALSE(aGraph.ContainsNode("e"));
+}
+
+// Тест: "ContainsEdge" возвращает истну, если дуга есть в графе.
+TEST(Graph, contains_edge_returns_true_if_graph_contains_edge)
+{
+	// Используется граф 1.
+	StringGraph aGraph;
+	aGraph.Build({ "a", "b", "c", "d" }, { {"a", "b"}, {"b", "c"}, {"b", "d"}, {"d", "a"} });
+	ASSERT_TRUE(aGraph.ContainsEdge(std::make_pair("a", "b")) &&
+		aGraph.ContainsEdge(std::make_pair("b", "c")) &&
+		aGraph.ContainsEdge(std::make_pair("b", "d")) &&
+		aGraph.ContainsEdge(std::make_pair("d", "a")));
+}
+
+// Тест: "ContainsEdge" возвращает ложь, если дуги нет в графе.
+TEST(Graph, contains_edge_returns_false_if_graph_does_not_contain_edge)
+{
+	// Используется граф 1.
+	StringGraph aGraph;
+	aGraph.Build({ "a", "b", "c", "d" }, { {"a", "b"}, {"b", "c"}, {"b", "d"}, {"d", "a"} });
+	ASSERT_FALSE(aGraph.ContainsEdge(std::make_pair("a", "d")) ||
+		aGraph.ContainsEdge(std::make_pair("x", "y")) ||
+		aGraph.ContainsEdge(std::make_pair("a", "x")) ||
+		aGraph.ContainsEdge(std::make_pair("x", "a")) ||
+		aGraph.ContainsEdge(std::make_pair("c", "a")));
+}
+
 // Тест: Может вывести граф.
 TEST(Graph, can_output_graph)
 {

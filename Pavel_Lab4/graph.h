@@ -88,6 +88,28 @@ public:
 		return theOut;
 	}
 
+	// Метод считывает граф из файла.
+	// Перед записью графа выполняется очистка текущего графа.
+	void ReadFromFile(const std::string& theFileName);
+
+	// to do : добавить простой main с чтением из файла графа.
+	//         После этого граф выводится на экран.
+	//         И будет выводиться только то, является ли граф связным.
+
+	// to do : menu
+	/*
+		1. Получить граф из файла -> Имя файла захардкожено. В файле находится 1 граф, записанный в таком виде:
+		  Nodes : <node1>; <node2>; <node3>; ...
+		  Edges : ( <node1>;<node2>); ( <node1>;<node2>); ...
+		2. Вывести список смежности данного графа <<
+		3. Очистить граф
+		4. Является ли граф связным << 
+		5. Добавление узла
+		6. Добавление дуги.
+		7. Удаление узла.
+		8. Удаление дуги.
+	*/
+
 	// Метод возвращает true, если граф является связным (то есть из каждой его вершины существует путь в любую другую вершину).
 	// Иначе возвращает false.
 	bool IsGraphConnected() const;
@@ -317,6 +339,24 @@ bool Graph<NodeType>::ContainsNode(const NodeType& theNode) const
 }
 
 //=========================================================
+// Function : ContainsEdge
+// Purpose  : Определяет, хранится ли дуга в графе
+//=========================================================
+template<class NodeType>
+bool Graph<NodeType>::ContainsEdge(const Edge & theEdge) const
+{
+	const NodeType& anEdgeBegin = theEdge.first;
+	const NodeType& anEdgeEnd = theEdge.second;
+	if (ContainsNode(anEdgeBegin) && ContainsNode(anEdgeEnd))
+	{
+		const NodeList& aNodeList = myAdjacencyMap.at(anEdgeBegin);
+		auto aFoundIter = std::find(aNodeList.cbegin(), aNodeList.cend(), anEdgeEnd);
+		return aFoundIter != aNodeList.cend();
+	}
+	return false;
+}
+
+//=========================================================
 // Function : IsGraphConnected
 // Purpose  : Определяет, является ли граф связным
 //=========================================================
@@ -398,7 +438,7 @@ bool Graph<NodeType>::ExistsPathBetweenTwoNodes(const NodeType& theBeginNode, co
 		const NodeList& aNodeList = aMap[aCurrentNode].first; // список узлов смежных с текущим
 		for (const auto& aNode : aNodeList)
 		{
-			int& aNodeVisitedCounter = aMap[aNode].second;
+			int aNodeVisitedCounter = aMap[aNode].second;
 			if (aNodeVisitedCounter < 2)
 			{
 				aNodeQueue.push(aNode);
